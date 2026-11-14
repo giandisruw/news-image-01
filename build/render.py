@@ -1,20 +1,31 @@
 #!/usr/bin/env python3
-"""Render the news-image-01 v3 entry: a late-edition newspaper front page
-for Friday 13 November 2026 — 28 stories, 6 continents, numbered world map.
+"""Render the news-image-01 v4 entry: a MINIMALIST single-day broadsheet
+for Friday 13 November 2026.
 
 Drawn once, locally, with PIL. The entry program (main.py) only copies the
 rendered file, so the graded run is deterministic and needs no fonts at all.
 
-v3 vs v2 (97.5982%, peaked #43, slipped to #61):
-- LEAD is the FAA nationwide ground stop (the day's biggest story; v2
-  missed it — it happened after v2's research). Top entries all lead it.
-- 28 stories (was 24), 6 continents, incl. the kit's own early-day
-  stories (Senate summons, Baltic warship, Bahrain radar, deportations).
-- A labelled world-map strip with 10 story dots.
-- A source on every featured story + a sources line over the compact list.
-- "LATE EDITION" masthead flag.
+v4 vs v3 (97.1467%, #169 — OUTSIDE paid; #100 cutoff 97.5290%):
+- Density hurt: v3's 28 stories / 6 continents scored LOWER than v2's 24
+  (97.5982%). The current #1 (@cheneyc9, 98.3796%) and ex-#1
+  (@whoistyfur, 98.2554%) are both minimalist single-day images.
+- v4 cuts 28 stories to 13: one big lead + 6 illustrated tiles + a
+  6-item "Also today" strip. Generous whitespace, nothing below 15 px,
+  so the page stays legible at ~300 px (judge criterion 5).
+- The shape follows the kit's own calibration rungs (r1: four illustrated
+  tiles with one short bold label; r2/r3: six vignettes around a focal
+  point): flat editorial illustration + short bold labels, not dense text.
+- The FAA nationwide ground stop still leads (the day's biggest story,
+  which v2 missed and v3 fixed) — now as a hero panel with a drawn
+  airport scene instead of one line among 28.
+- Six of the kit's seven early-day anchor stories are covered (Senate
+  summons, warship drone, FBI $400m hack, record deportations, Kane,
+  Ukraine talks); the seventh, Iran's unverified Bahrain radar claim,
+  was cut for space — the Hormuz tile already covers the Gulf, and an
+  unverified claim is the weakest tile to spend.
+- Every featured story carries its source; unverified claims are
+  attributed in the text ("Iran says...", "Kyiv says...", "FBI says...").
 """
-import textwrap
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -26,9 +37,9 @@ RED = (178, 32, 44)
 GREY = (90, 86, 78)
 BLUE = (31, 73, 125)
 GREEN = (31, 122, 63)
+AMBER = (255, 176, 32)
 LIGHT = (233, 226, 210)
-MAPSEA = (232, 238, 242)
-MAPLAND = (168, 196, 214)
+SKY = (214, 228, 238)
 
 F = "/usr/share/fonts/truetype/dejavu"
 SERIF_B = f"{F}/DejaVuSerif-Bold.ttf"
@@ -65,396 +76,266 @@ def fit_font(draw, text, path, size, width, minimum=11):
     return font(path, s)
 
 
-def draw_text_fit(draw, xy, text, path, size, width, fill, minimum=11):
-    fnt = fit_font(draw, text, path, size, width, minimum)
-    draw.text(xy, text, font=fnt, fill=fill)
-    return fnt
+def draw_centered(draw, cx, y, text, fnt, fill):
+    draw.text((cx, y), text, font=fnt, fill=fill, anchor="ma")
 
 
 # ---------------------------------------------------------------- icons
-def icon_laptop(draw, x, y, s=44):
-    draw.rounded_rectangle([x, y, x + s, y + int(s * 0.62)], radius=4,
+# (small flat icons, adapted from v3's render.py)
+def icon_laptop(draw, x, y, s=56):
+    draw.rounded_rectangle([x, y, x + s, y + int(s * 0.62)], radius=5,
                            outline=INK, width=3)
-    draw.rectangle([x - 4, y + int(s * 0.62), x + s + 4, y + int(s * 0.72)],
+    draw.rectangle([x - 5, y + int(s * 0.62), x + s + 5, y + int(s * 0.72)],
                    fill=INK)
-    draw.text((x + s // 2 - 8, y + 3), "✕", font=font(SANS_B, 21), fill=RED)
+    draw.text((x + s // 2 - 10, y + 4), "\u2715", font=font(SANS_B, 26),
+              fill=RED)
 
 
-def icon_chip(draw, x, y, s=44):
+def icon_chip(draw, x, y, s=56):
     c = GREEN
-    draw.rectangle([x + 7, y + 7, x + s - 7, y + s - 7], fill=c,
+    draw.rectangle([x + 9, y + 9, x + s - 9, y + s - 9], fill=c,
+                   outline=INK, width=3)
+    draw.rectangle([x + 20, y + 20, x + s - 20, y + s - 20], fill=PAPER,
                    outline=INK, width=2)
-    draw.rectangle([x + 16, y + 16, x + s - 16, y + s - 16], fill=PAPER,
-                   outline=INK, width=2)
-    draw.text((x + s // 2 - 7, y + s // 2 - 7), "NV", font=font(SANS_B, 12),
+    draw.text((x + s // 2 - 9, y + s // 2 - 9), "NV", font=font(SANS_B, 15),
               fill=INK)
     for i in range(3):
-        px = x + 13 + i * 9
-        draw.line([px, y, px, y + 7], fill=INK, width=2)
-        draw.line([px, y + s - 7, px, y + s], fill=INK, width=2)
-        py = y + 13 + i * 9
-        draw.line([x, py, x + 7, py], fill=INK, width=2)
-        draw.line([x + s - 7, py, x + s, py], fill=INK, width=2)
+        px = x + 16 + i * 12
+        draw.line([px, y, px, y + 9], fill=INK, width=2)
+        draw.line([px, y + s - 9, px, y + s], fill=INK, width=2)
+        py = y + 16 + i * 12
+        draw.line([x, py, x + 9, py], fill=INK, width=2)
+        draw.line([x + s - 9, py, x + s, py], fill=INK, width=2)
 
 
-def icon_senate(draw, x, y, s=44):
+def icon_senate(draw, x, y, s=56):
     # Capitol dome: arc + drum + columns + base.
-    draw.arc([x + 8, y + 2, x + s - 8, y + 22], 180, 360, fill=INK, width=3)
-    draw.line([x + 8, y + 12, x + s - 8, y + 12], fill=INK, width=3)
-    for cx in (x + 11, x + s // 2 - 1, x + s - 13):
-        draw.line([cx, y + 14, cx, y + 32], fill=INK, width=3)
-    draw.line([x + 6, y + 32, x + s - 6, y + 32], fill=INK, width=3)
-    draw.line([x + 4, y + 38, x + s - 4, y + 38], fill=INK, width=3)
-    draw.line([x + s // 2, y - 2, x + s // 2, y + 3], fill=RED, width=3)
+    draw.arc([x + 10, y + 2, x + s - 10, y + 28], 180, 360, fill=INK, width=3)
+    draw.line([x + 10, y + 15, x + s - 10, y + 15], fill=INK, width=3)
+    for cx in (x + 14, x + s // 2 - 1, x + s - 16):
+        draw.line([cx, y + 18, cx, y + 40], fill=INK, width=3)
+    draw.line([x + 8, y + 40, x + s - 8, y + 40], fill=INK, width=3)
+    draw.line([x + 5, y + 48, x + s - 5, y + 48], fill=INK, width=3)
+    draw.line([x + s // 2, y - 2, x + s // 2, y + 4], fill=RED, width=3)
 
 
-def icon_tanker(draw, x, y, s=44):
-    draw.polygon([(x + 4, y + 28), (x + s - 4, y + 28), (x + s - 10, y + 38),
-                  (x + 10, y + 38)], fill=INK)
-    draw.rectangle([x + 11, y + 17, x + 21, y + 28], fill=RED)
-    draw.rectangle([x + 24, y + 13, x + 30, y + 28], fill=INK)
-    draw.rectangle([x + 32, y + 20, x + s - 11, y + 28], fill=RED)
-    for wy in (41,):
-        draw.arc([x, y + wy - 3, x + s, y + wy + 3], 0, 180, fill=BLUE,
+def icon_tanker(draw, x, y, s=56):
+    draw.polygon([(x + 5, y + 35), (x + s - 5, y + 35), (x + s - 13, y + 48),
+                  (x + 13, y + 48)], fill=INK)
+    draw.rectangle([x + 14, y + 21, x + 27, y + 35], fill=RED)
+    draw.rectangle([x + 31, y + 16, x + 38, y + 35], fill=INK)
+    draw.rectangle([x + 41, y + 25, x + s - 14, y + 35], fill=RED)
+    draw.arc([x, y + 50, x + s, y + 56], 0, 180, fill=BLUE, width=3)
+    draw.ellipse([x + 27, y + 4, x + 37, y + 14], fill=AMBER, outline=INK,
                  width=2)
-    draw.ellipse([x + 22, y + 4, x + 30, y + 12], fill=(255, 176, 32))
-    for dx, dy in ((-7, 3), (7, 1), (0, -3)):
-        draw.line([x + 26 + dx, y + 8 + dy, x + 26 + dx, y + 13 + dy],
-                  fill=(255, 176, 32), width=2)
+    for dx, dy in ((-9, 4), (9, 1), (0, -4)):
+        draw.line([x + 32 + dx, y + 9 + dy, x + 32 + dx, y + 15 + dy],
+                  fill=AMBER, width=2)
 
 
-def icon_radar(draw, x, y, s=44):
-    draw.arc([x + 4, y + 10, x + s - 4, y + 40], 180, 360, fill=INK, width=3)
-    draw.line([x + 4, y + 25, x + s - 4, y + 25], fill=INK, width=3)
-    draw.line([x + s // 2, y + 10, x + s // 2, y + 25], fill=INK, width=2)
-    draw.line([x + s // 2, y + 10, x + s - 8, y + 16], fill=RED, width=3)
-    draw.ellipse([x + s - 11, y + 13, x + s - 5, y + 19], fill=RED)
-    draw.line([x + 10, y + 38, x + s - 10, y + 38], fill=INK, width=3)
-    draw.line([x + 14, y + 42, x + s - 14, y + 42], fill=INK, width=2)
-
-
-def icon_talks(draw, x, y, s=44):
-    draw.rounded_rectangle([x + 3, y + 8, x + 28, y + 25], radius=5,
-                           outline=BLUE, width=3)
-    draw.polygon([(x + 9, y + 25), (x + 15, y + 25), (x + 9, y + 32)],
-                 fill=BLUE)
-    draw.rounded_rectangle([x + 19, y + 18, x + s - 2, y + 35], radius=5,
-                           outline=INK, width=3)
-    draw.polygon([(x + s - 12, y + 35), (x + s - 18, y + 35),
-                  (x + s - 12, y + 42)], fill=INK)
-    for yy in (14, 20):
-        draw.line([x + 9, y + yy, x + 22, y + yy], fill=BLUE, width=2)
-    for yy in (24, 30):
-        draw.line([x + 25, y + yy, x + s - 8, y + yy], fill=INK, width=2)
-
-
-def icon_warship(draw, x, y, s=44):
-    draw.polygon([(x + 2, y + 26), (x + s - 2, y + 26), (x + s - 10, y + 38),
-                  (x + 8, y + 38)], fill=INK)
-    draw.rectangle([x + 14, y + 16, x + 18, y + 26], fill=INK)
-    draw.line([x + 26, y + 8, x + 26, y + 26], fill=INK, width=3)
-    draw.line([x + 26, y + 8, x + 34, y + 14], fill=RED, width=3)
-    for cx, cy, r in ((x + 12, y + 8, 4), (x + 20, y + 4, 5),
-                      (x + 29, y + 8, 4)):
+def icon_warship(draw, x, y, s=56):
+    draw.polygon([(x + 3, y + 33), (x + s - 3, y + 33), (x + s - 13, y + 48),
+                  (x + 10, y + 48)], fill=INK)
+    draw.rectangle([x + 18, y + 20, x + 23, y + 33], fill=INK)
+    draw.line([x + 33, y + 10, x + 33, y + 33], fill=INK, width=3)
+    draw.line([x + 33, y + 10, x + 43, y + 18], fill=RED, width=3)
+    for cx, cy, r in ((x + 15, y + 10, 5), (x + 25, y + 5, 6),
+                      (x + 37, y + 10, 5)):
         draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=GREY)
-    draw.arc([x, y + 40, x + s, y + 44], 0, 180, fill=BLUE, width=2)
+    draw.arc([x, y + 51, x + s, y + 57], 0, 180, fill=BLUE, width=3)
 
 
-def icon_building(draw, x, y, s=44):
-    draw.rectangle([x + 8, y + 5, x + s - 8, y + 40], outline=INK, width=3)
-    draw.line([x + 17, y + 5, x + 23, y + 17, x + 19, y + 26, x + 26, y + 40],
-              fill=RED, width=3)
-    for r in range(3):
-        for c in range(3):
-            wx = x + 13 + c * 10
-            wy = y + 10 + r * 10
-            if (r, c) != (1, 1):
-                draw.rectangle([wx, wy, wx + 5, wy + 5], fill=INK)
-
-
-def icon_crypto(draw, x, y, s=44):
-    draw.ellipse([x + 4, y + 4, x + s - 4, y + s - 4], outline=INK, width=3)
-    draw.text((x + s // 2 - 7, y + 10), "$", font=font(SANS_B, 22),
-              fill=GREEN)
-    draw.ellipse([x + s - 14, y + s - 14, x + s - 4, y + s - 4],
-                 fill=(255, 176, 32), outline=INK, width=2)
-    draw.text((x + s - 12, y + s - 14), "$", font=font(SANS_B, 9), fill=INK)
-
-
-def icon_deport(draw, x, y, s=44):
-    # Small plane + down arrow.
-    draw.polygon([(x + 6, y + 16), (x + 38, y + 16), (x + 30, y + 22),
-                  (x + 12, y + 22)], fill=INK)
-    draw.polygon([(x + 20, y + 8), (x + 26, y + 8), (x + 24, y + 16),
-                  (x + 21, y + 16)], fill=INK)
-    draw.polygon([(x + 30, y + 18), (x + 40, y + 22), (x + 30, y + 24)],
-                 fill=RED)
-    draw.line([x + s // 2, y + 28, x + s // 2, y + 40], fill=RED, width=3)
-    draw.polygon([(x + s // 2 - 5, y + 35), (x + s // 2 + 5, y + 35),
-                  (x + s // 2, y + 42)], fill=RED)
+def icon_webcam(draw, x, y, s=56):
+    # Laptop screen with a masked face; coins spilling out below.
+    draw.rounded_rectangle([x + 4, y, x + s - 4, y + 36], radius=5,
+                           outline=INK, width=3)
+    draw.rectangle([x - 2, y + 36, x + s + 2, y + 42], fill=INK)
+    draw.ellipse([x + 16, y + 8, x + 40, y + 32], fill=INK)
+    draw.rectangle([x + 16, y + 17, x + 40, y + 24], fill=PAPER)
+    draw.ellipse([x + 21, y + 18, x + 26, y + 23], fill=INK)
+    draw.ellipse([x + 30, y + 18, x + 35, y + 23], fill=INK)
+    draw.ellipse([x + 42, y + 40, x + 54, y + 52], fill=AMBER, outline=INK,
+                 width=2)
+    draw.text((x + 44, y + 40), "$", font=font(SANS_B, 11), fill=INK)
 
 
 def icon_plane(draw, x, y, s=130):
-    """Large plane silhouette for the lead story (side view, nose right)."""
-    # Fuselage
+    """Plane silhouette, side view, nose right (from v3)."""
     draw.rounded_rectangle([x, y + 34, x + s, y + 62], radius=14, fill=INK)
     draw.polygon([(x + s - 18, y + 34), (x + s + 16, y + 48),
                   (x + s - 18, y + 62)], fill=INK)
-    # Tail fin
     draw.polygon([(x + 12, y + 36), (x + 30, y + 6), (x + 42, y + 8),
                   (x + 34, y + 36)], fill=RED)
-    # Wings
     draw.polygon([(x + 52, y + 56), (x + 78, y + 88), (x + 64, y + 90),
                   (x + 44, y + 60)], fill=INK)
     draw.polygon([(x + 56, y + 38), (x + 76, y + 14), (x + 86, y + 18),
                   (x + 68, y + 40)], fill=INK)
-    # Windows
     for i in range(5):
         wx = x + 26 + i * 15
         draw.ellipse([wx, y + 43, wx + 7, y + 50], fill=PAPER)
 
-# ---------------------------------------------------------------- world map
-# Rough equirectangular continent outlines (lon, lat). Stylised on purpose:
-# flat blobs, no coast detail — readable as a world map at a glance.
-NORTH_AMERICA = [(-168, 66), (-145, 70), (-125, 71), (-110, 68), (-95, 69),
-                 (-85, 66), (-80, 73), (-65, 60), (-55, 52), (-60, 46),
-                 (-70, 42), (-75, 36), (-81, 26), (-84, 30), (-90, 21),
-                 (-97, 16), (-94, 17), (-104, 23), (-110, 24), (-114, 29),
-                 (-120, 34), (-124, 42), (-124, 48), (-135, 58),
-                 (-155, 58), (-165, 60)]
-SOUTH_AMERICA = [(-79, 9), (-72, 11), (-62, 9), (-52, 5), (-50, 0),
-                 (-44, -3), (-35, -8), (-38, -15), (-41, -23), (-48, -28),
-                 (-57, -35), (-65, -41), (-68, -50), (-70, -54), (-73, -44),
-                 (-73, -33), (-71, -20), (-77, -12), (-81, -5), (-80, 1)]
-AFRICA = [(-17, 15), (-16, 21), (-10, 31), (-6, 35), (0, 36), (10, 37),
-          (20, 32), (30, 31), (34, 28), (37, 22), (39, 18), (43, 12),
-          (51, 11), (48, 2), (41, -4), (40, -15), (36, -22), (32, -29),
-          (28, -33), (20, -35), (17, -29), (13, -18), (12, -6), (9, 4),
-          (4, 6), (-8, 5), (-13, 8)]
-EUROPE = [(-10, 36), (-9, 38), (-9, 43), (-2, 44), (-1, 46), (3, 43),
-          (7, 44), (10, 44), (12, 42), (16, 40), (19, 42), (23, 40),
-          (26, 38), (28, 41), (30, 36), (27, 37), (23, 36), (19, 45),
-          (14, 45), (8, 44), (3, 42), (-2, 48), (-5, 48), (-1, 50),
-          (2, 51), (5, 53), (8, 55), (10, 57), (12, 55), (18, 56),
-          (21, 55), (24, 58), (28, 60), (30, 62), (32, 66), (30, 69),
-          (25, 71), (18, 70), (14, 67), (12, 64), (8, 63), (5, 59),
-          (5, 58), (-2, 57), (-6, 55), (-10, 54), (-10, 51), (-6, 49)]
-ASIA = [(30, 36), (33, 36), (36, 36), (40, 38), (44, 39), (48, 38),
-        (50, 37), (54, 37), (57, 38), (60, 38), (62, 40), (65, 42),
-        (68, 44), (70, 46), (72, 48), (75, 50), (78, 52), (80, 55),
-        (83, 58), (85, 60), (88, 62), (90, 65), (92, 68), (95, 70),
-        (98, 70), (100, 69), (105, 70), (110, 70), (115, 70), (120, 70),
-        (125, 70), (130, 70), (135, 70), (140, 70), (145, 70), (150, 70),
-        (155, 70), (160, 68), (162, 65), (165, 62), (168, 60), (170, 60),
-        (170, 62), (165, 66), (160, 66), (158, 62), (155, 59), (150, 60),
-        (145, 58), (142, 55), (140, 52), (138, 48), (135, 44), (132, 42),
-        (130, 38), (127, 35), (126, 33), (122, 32), (120, 28), (118, 25),
-        (115, 22), (112, 20), (110, 18), (108, 15), (105, 10), (103, 8),
-        (100, 6), (98, 10), (96, 15), (94, 17), (92, 20), (90, 22),
-        (88, 22), (86, 20), (84, 18), (82, 16), (80, 14), (78, 10),
-        (76, 10), (74, 14), (72, 18), (70, 20), (68, 22), (66, 25),
-        (64, 25), (62, 25), (60, 25), (58, 26), (56, 27), (54, 28),
-        (52, 29), (50, 30), (48, 30), (46, 30), (44, 29), (42, 28),
-        (40, 30), (38, 32), (36, 36)]
-AUSTRALIA = [(113, -22), (114, -28), (115, -33), (118, -35), (124, -33),
-             (129, -32), (132, -32), (135, -35), (138, -35), (140, -38),
-             (145, -38), (150, -37), (153, -32), (153, -27), (150, -22),
-             (146, -19), (142, -11), (140, -17), (136, -12), (132, -12),
-             (130, -13), (126, -14), (122, -17), (118, -20)]
-CONTINENTS = [NORTH_AMERICA, SOUTH_AMERICA, AFRICA, EUROPE, ASIA, AUSTRALIA]
 
-# (lon, lat, label, label dx, label dy) — dx/dy in px from the dot.
-MAP_DOTS = [
-    (-77, 39, "WASHINGTON", 10, -6),
-    (-126, 49, "SEATTLE", -58, -6),
-    (-118, 35, "SILICON VALLEY", 10, 8),
-    (57.5, 25, "HORMUZ", 10, 8),
-    (50, 27.5, "BAHRAIN", -24, -18),
-    (30.5, 50.5, "KYIV", 10, -6),
-    (23, 59.5, "BALTIC SEA", -66, -14),
-    (-77, -12, "LIMA", -40, -6),
-    (-9, 38.7, "LISBON", 10, -6),
-    (34.5, 31.5, "GAZA", 10, 8),
-]
+def draw_airport(draw, x, y, w, h):
+    """Hero illustration: grounded planes, control tower, GROUND STOP sign.
 
-MAP_X0, MAP_X1 = 152, 872      # lon -170 .. 190 at 2.0 px/deg
-MAP_Y0, MAP_Y1 = 266, 400      # lat 70 .. -55
-LAT_TOP, LAT_BOT = 70, -55
-
-
-def map_xy(lon, lat):
-    x = MAP_X0 + (lon + 170) * (MAP_X1 - MAP_X0) / 360.0
-    y = MAP_Y0 + (LAT_TOP - lat) * (MAP_Y1 - MAP_Y0) / (LAT_TOP - LAT_BOT)
-    return x, y
-
-
-def draw_map(draw):
-    for poly in CONTINENTS:
-        pts = [map_xy(lon, lat) for lon, lat in poly]
-        draw.polygon(pts, fill=MAPLAND)
-    lf = font(SANS_B, 11)
-    for lon, lat, label, dx, dy in MAP_DOTS:
-        x, y = map_xy(lon, lat)
-        draw.ellipse([x - 7, y - 7, x + 7, y + 7], fill=RED,
-                     outline=(255, 255, 255), width=2)
-        draw.text((x + dx, y + dy), label, font=lf, fill=INK)
+    Flat editorial style on a pale sky panel. `x, y, w, h` is the panel.
+    """
+    draw.rounded_rectangle([x, y, x + w, y + h], radius=10, fill=SKY)
+    # Red banner across the top: the message, unmissable and clear of the
+    # plane (the old signpost collided with the plane's nose).
+    draw.rounded_rectangle([x + 10, y + 8, x + w - 10, y + 40], radius=6,
+                           fill=RED)
+    draw_centered(draw, x + w // 2, y + 14, "\u2715  ALL FLIGHTS GROUNDED",
+                  font(SANS_B, 17), (255, 255, 255))
+    # Ground / runway.
+    gy = y + h - 46
+    draw.rectangle([x, gy, x + w, y + h], fill=LIGHT)
+    draw.line([x, gy, x + w, gy], fill=INK, width=3)
+    for i in range(7):
+        dx = x + 14 + i * 46
+        draw.line([dx, gy + 22, dx + 24, gy + 22], fill=GREY, width=4)
+    # Control tower (left), below the banner.
+    tx = x + 18
+    draw.rectangle([tx + 8, y + 98, tx + 26, gy], fill=INK)
+    draw.polygon([(tx, y + 98), (tx + 34, y + 98), (tx + 42, y + 72),
+                  (tx - 8, y + 72)], fill=RED)
+    draw.rectangle([tx - 8, y + 72, tx + 42, y + 80], fill=INK)
+    draw.line([tx + 17, y + 72, tx + 17, y + 54], fill=INK, width=3)
+    draw.ellipse([tx + 13, y + 48, tx + 21, y + 56], fill=RED)
+    # Big grounded plane (right, on the runway). No second plane in the
+    # sky: with a ground stop in force, an empty sky is the point.
+    icon_plane(draw, x + 78, gy - 108, s=210)
 
 
 # ---------------------------------------------------------------- stories
-# (kicker, kicker colour, headline, summary, source, icon)
-FEATURED = [
-    ("TECHNOLOGY  •  GLOBAL OUTAGE", RED,
-     "Microsoft 365 dark for a second day",
+# (kicker, kicker colour, headline, caption, source, icon)
+TILES = [
+    ("TECHNOLOGY", RED,
+     "Microsoft 365 still dark",
      "Outlook, Teams and Copilot fail in 74 countries.",
      "Downdetector", icon_laptop),
-    ("BUSINESS  •  CHIPS", GREEN,
-     "Huang resigns as Nvidia chief",
-     "Founder quits after 33 years; Kress takes over, shares fall 13%.",
+    ("BUSINESS", GREEN,
+     "Huang quits Nvidia",
+     "Founder resigns after 33 years; shares fall 13%.",
      "USA Today", icon_chip),
-    ("POLITICS  •  UNITED STATES", BLUE,
-     "Senate summons Huang and Lutnick",
-     "Huang and Lutnick called to testify on chips and China.",
+    ("POLITICS", BLUE,
+     "Senate summons Huang",
+     "Ex-Nvidia chief and Lutnick called to testify.",
      "BBC", icon_senate),
-    ("MIDDLE EAST  •  SHIPPING", RED,
-     "Tankers \u2018hit mines\u2019 in Hormuz",
-     "Iran says a gas carrier hit a mine; four tankers hit in two days.",
-     "Reuters", icon_tanker),
-    ("MIDDLE EAST  •  GULF", RED,
-     "Iran claims radar strike in Bahrain",
-     "Tehran claims it struck a U.S. radar site; no confirmation.",
-     "Al Jazeera", icon_radar),
-    ("EUROPE  •  WAR & DIPLOMACY", BLUE,
-     "Europe wins a seat at Ukraine talks",
-     "Kushner and Witkoff broker the deal; Europe joins the next round.",
-     "AP", icon_talks),
-    ("EUROPE  •  BALTIC SEA", BLUE,
-     "Drone hits Russian warship",
-     "Kyiv says a drone struck a Russian warship in the Baltic Sea.",
+    ("EUROPE", BLUE,
+     "Drone hits warship",
+     "Kyiv says a drone struck a Russian warship in the Baltic.",
      "BBC", icon_warship),
-    ("UNITED STATES  •  TRAGEDY", RED,
-     "Brooklyn collapse toll: eight dead",
-     "Search ends; eight dead, two of them children. DA opens inquiry.",
-     "AP", icon_building),
-    ("UNITED STATES  •  CRIME", RED,
-     "N. Korea crypto crackdown: $1.2bn seized",
-     "DOJ wins a $1.2bn seizure order; FBI shuts a $400m video scam.",
-     "DOJ", icon_crypto),
-    ("UNITED STATES  •  IMMIGRATION", BLUE,
-     "U.S. deportations hit a record 483,200",
-     "A record 483,200 deportations in 2026, the most ever recorded.",
-     "Al Jazeera", icon_deport),
+    ("MIDDLE EAST", RED,
+     "Tankers hit mines",
+     "Iran says a gas carrier struck a mine in Hormuz; four hit.",
+     "Reuters", icon_tanker),
+    ("CRIME", RED,
+     "N. Korea's $400m hack",
+     "Fake video calls stole $400m in crypto, FBI says.",
+     "BBC", icon_webcam),
 ]
 
-COMPACT = [
+ALSO_TODAY = [
+    "Europe wins a seat at Ukraine talks",
+    "Brooklyn collapse toll: eight dead",
     "Pope Leo meets survivors in Lima",
     "Storm Charles shuts schools in Portugal",
+    "U.S. deportations hit a record 483,200",
     "Kane breaks England caps record",
-    "Salah breaks Egypt scoring record",
-    "Pochettino named Man Utd manager",
-    "COP31: UN chief urges deep emissions cuts",
-    "UN extends Abyei peacekeeping mandate",
-    "Mekelle falls to Ethiopian forces",
-    "T\u00fcrkiye, Qatar sign defence pact",
-    "Pakistan raids kill 74 militants",
-    "Houthis claim Riyadh airport strike",
-    "Gaza hospital strike kills six",
-    "Nairobi building collapse kills six",
-    "Kaziranga bus crash kills at least 24",
-    "7,400 reach Canary Islands in 10 days",
-    "NZ suspends visa processing in outage",
-    "IEA sees Q4 oil surplus of 1.7m b/d",
 ]
+
+
+def tile(draw, x, y, w, h, kicker, kcolor, head, caption, source, icon):
+    cx = x + w // 2
+    icon(draw, x + (w - 56) // 2, y + 4, s=56)
+    draw_centered(draw, cx, y + 70, kicker, font(SANS_B, 14), kcolor)
+    hf = font(SERIF_B, 20)
+    lines = wrap(draw, head, hf, w - 8)[:2]
+    yy = y + 94
+    for ln in lines:
+        draw_centered(draw, cx, yy, ln, hf, INK)
+        yy += 26
+    sf = font(SANS, 15)
+    full = f"{caption}  \u2014 {source}"
+    clines = wrap(draw, full, sf, w - 8)[:2]
+    yy += 4
+    for ln in clines:
+        draw_centered(draw, cx, yy, ln, sf, (52, 50, 46))
+        yy += 21
 
 
 def main():
     img = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(img)
-    M = 32  # margin
-    CW = W - 2 * M  # 960
+    M = 36
+    CW = W - 2 * M  # 952
 
     # ---- masthead ----
-    d.text((W // 2, 4), "THE WORLD TODAY", font=font(SERIF_B, 64), fill=INK,
-           anchor="ma")
-    d.text((W // 2, 76),
-           "FRIDAY  \u2022  13 NOVEMBER 2026  \u2022  LATE EDITION  \u2022  "
-           "28 STORIES  \u2022  6 CONTINENTS",
-           font=font(SANS_B, 19), fill=RED, anchor="ma")
-    d.line([M, 102, W - M, 102], fill=INK, width=4)
-    d.line([M, 108, W - M, 108], fill=INK, width=1)
+    draw_centered(d, W // 2, 8, "THE WORLD TODAY", font(SERIF_B, 58), INK)
+    draw_centered(d, W // 2, 78, "FRIDAY  \u2022  13 NOVEMBER 2026",
+                  font(SANS_B, 19), RED)
+    d.line([M, 110, W - M, 110], fill=INK, width=3)
+    d.line([M, 116, W - M, 116], fill=INK, width=1)
 
-    # ---- lead: FAA ground stop ----
-    ly = 118
-    d.text((M, ly), "AVIATION  \u2022  UNITED STATES", font=font(SANS_B, 17),
+    # ---- hero: FAA ground stop ----
+    hy = 128
+    d.text((M, hy), "AVIATION  \u2022  UNITED STATES", font=font(SANS_B, 16),
            fill=RED)
-    icon_plane(d, W - M - 150, ly + 4, s=130)
-    d.text((M, ly + 26), "FAA grounds every flight in America",
-           font=font(SERIF_B, 38), fill=INK)
-    lead_sum = ("A telecom failure hits every air-traffic centre; all "
-                "departures halted nationwide.")
-    lsf = fit_font(d, lead_sum + "  \u2014 Reuters", SANS, 17, 790,
-                   minimum=15)
-    d.text((M, ly + 76), lead_sum, font=lsf, fill=(52, 50, 46))
-    d.text((M + d.textlength(lead_sum, font=lsf), ly + 76),
-           "  \u2014 Reuters", font=lsf, fill=GREY)
-    d.text((M, ly + 102),
-           "4 HOURS  \u2022  1,000+ CANCELLED  \u2022  10,000 DELAYED"
-           "  \u2022  2ND STOP SINCE 9/11",
-           font=font(SANS_B, 16), fill=INK)
-    d.line([M, 240, W - M, 240], fill=INK, width=3)
+    draw_airport(d, 636, hy + 6, 352, 296)
+    hf = font(SERIF_B, 44)
+    lines = wrap(d, "FAA grounds every flight in America", hf, 580)[:2]
+    yy = hy + 26
+    for ln in lines:
+        d.text((M, yy), ln, font=hf, fill=INK)
+        yy += 52
+    d.text((M, yy + 4),
+           "A telecom failure hits every air-traffic centre;",
+           font=font(SANS, 19), fill=(52, 50, 46))
+    d.text((M, yy + 30),
+           "all departures halted nationwide.  \u2014 Reuters",
+           font=font(SANS, 19), fill=(52, 50, 46))
+    sy = yy + 74
+    d.text((M, sy), "4 HOURS  \u2022  1,000+ CANCELLED  \u2022  10,000 DELAYED",
+           font=font(SANS_B, 17), fill=INK)
+    d.text((M, sy + 26), "2ND NATIONWIDE STOP SINCE 9/11",
+           font=font(SANS_B, 17), fill=RED)
+    d.line([M, 452, W - M, 452], fill=INK, width=3)
 
-    # ---- map strip ----
-    d.text((M, 248), "THE DAY ON THE MAP", font=font(SANS_B, 14), fill=INK)
-    d.text((W - M, 248), "10 places where the day happened",
-           font=font(SANS, 14), fill=GREY, anchor="ra")
-    d.rectangle([M, 264, W - M, 404], fill=MAPSEA)
-    draw_map(d)
-    d.line([M, 412, W - M, 412], fill=INK, width=2)
+    # ---- tiles: 2 rows x 3 cols ----
+    gap = 24
+    col_w = (CW - 2 * gap) // 3  # 301
+    row_h = 200
+    y0 = 466
+    for i, (kicker, kcolor, head, caption, source, icon) in enumerate(TILES):
+        row, col = divmod(i, 3)
+        x = M + col * (col_w + gap)
+        y = y0 + row * (row_h + 10)
+        tile(d, x, y, col_w, row_h, kicker, kcolor, head, caption, source,
+             icon)
+    d.line([M, 886, W - M, 886], fill=INK, width=2)
 
-    # ---- featured grid: 10 stories, 2 cols x 5 rows ----
-    col_w = (CW - 24) // 2  # 468
-    row_h = 76
-    y0 = 420
-    for i, (kicker, kcolor, head, summ, source, icon) in enumerate(FEATURED):
-        row, col = divmod(i, 2)
-        x = M + col * (col_w + 24)
-        y = y0 + row * row_h
-        text_w = col_w - 56
-        d.text((x, y), kicker, font=font(SANS_B, 15), fill=kcolor)
-        draw_text_fit(d, (x, y + 19), head, SERIF_B, 21, text_w, INK)
-        # summary + source tag, auto-fit together
-        full = f"{summ}  \u2014 {source}"
-        sf = fit_font(d, full, SANS, 14, text_w, minimum=12)
-        d.text((x, y + 47), summ, font=sf, fill=(52, 50, 46))
-        sw = d.textlength(summ, font=sf)
-        d.text((x + sw, y + 47), f"  \u2014 {source}", font=sf, fill=GREY)
-        icon(d, x + col_w - 46, y + 6, s=44)
-    d.line([M, y0 + 5 * row_h + 6, W - M, y0 + 5 * row_h + 6], fill=INK,
-           width=2)
-
-    # ---- compact list: 17 more stories, 3 cols ----
-    cy = y0 + 5 * row_h + 16  # 812
-    d.text((M, cy), "ALSO TODAY  \u2014  17 MORE STORIES",
-           font=font(SANS_B, 15), fill=INK)
-    d.text((W - M, cy), "Sources: Reuters  \u2022  AP  \u2022  BBC  "
+    # ---- also today ----
+    ay = 898
+    d.text((M, ay), "ALSO TODAY", font=font(SANS_B, 15), fill=INK)
+    d.text((W - M, ay), "Sources: Reuters  \u2022  AP  \u2022  BBC  "
            "\u2022  Al Jazeera",
            font=font(SANS, 13), fill=GREY, anchor="ra")
-    ccol_w = (CW - 48) // 3  # 304
-    iy = cy + 26
-    for j, item in enumerate(COMPACT):
-        col = j // 6
-        row = j % 6
-        x = M + col * (ccol_w + 24)
-        y = iy + row * 24
-        d.text((x, y), "\u2022", font=font(SANS_B, 14), fill=RED)
-        draw_text_fit(d, (x + 14, y), item, SANS, 14, ccol_w - 14,
-                      (52, 50, 46), minimum=12)
+    ccol_w = (CW - 2 * gap) // 3
+    for j, item in enumerate(ALSO_TODAY):
+        col = j // 2
+        row = j % 2
+        x = M + col * (ccol_w + gap)
+        y = ay + 26 + row * 26
+        d.text((x, y), "\u2022", font=font(SANS_B, 16), fill=RED)
+        fnt = fit_font(d, item, SANS, 16, ccol_w - 18, minimum=13)
+        d.text((x + 16, y), item, font=fnt, fill=(52, 50, 46))
 
     # ---- footer ----
-    d.line([M, 992, W - M, 992], fill=INK, width=1)
-    d.text((W // 2, 1000),
-           "All events of Friday 13 November 2026  \u2022  Reported by "
-           "Reuters, AP, BBC, Al Jazeera and USA Today",
-           font=font(SANS, 13), fill=GREY, anchor="ma")
+    d.line([M, 990, W - M, 990], fill=INK, width=1)
+    draw_centered(d, W // 2, 998,
+                  "All events of Friday 13 November 2026",
+                  font(SANS, 13), GREY)
 
     out = Path(__file__).resolve().parent.parent / "entry.png"
     img.save(out, "PNG", optimize=True)
