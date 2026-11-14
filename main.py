@@ -1,14 +1,12 @@
-"""news-image-01 entry (v3): copy the bundled image to the output path.
+"""news-image-01 v4 entry: copy the bundled image to the output path.
 
-The image is a late-edition newspaper front page for Friday 13 November
+The image is a minimalist newspaper front page for Friday 13 November
 2026, drawn once with PIL and stored in this repository as entry.png
-("THE WORLD TODAY" — FAA nationwide ground stop lead, Microsoft outage,
-Huang resignation, Senate summons, Hormuz, Bahrain radar, Ukraine talks,
-Baltic warship, Brooklyn, N. Korea crypto crackdown, record deportations,
-a labelled world map, plus 17 more stories). This program does nothing
-but copy those exact bytes to /output/entry.png (or $MAKEFUN_OUTPUT_DIR/
-entry.png when that variable is set), so the two grader runs always write
-identical bytes.
+("THE WORLD TODAY" — FAA ground-stop hero, six illustrated story tiles,
+plus an "Also today" strip; 13 stories total). This program does nothing
+but copy those exact bytes to /output/entry.png (or
+$MAKEFUN_OUTPUT_DIR/entry.png when that variable is set), so the two
+grader runs always write identical bytes.
 
 Standard library only, no network, no randomness.
 """

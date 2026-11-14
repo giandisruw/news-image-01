@@ -1,14 +1,14 @@
-# NOTES — news-image-01 v3 research (Sat 14 Nov 2026)
+# NOTES — news-image-01 v4 research (Sat 14 Nov 2026)
 
-Built 14 Nov 2026 ~13:40–14:30 WIB. v2 scored 97.5982% (12W/0D/0L),
-peaked #43, then slipped to #61 — 0.1364 pts below the #50 cutoff
-(97.7346%). The v3 fixes the one big miss: v2 was researched ~03:20 WIB,
-just BEFORE the FAA's nationwide ground stop (issued ~4pm ET 13 Nov =
-04:00 WIB 14 Nov), so the day's biggest story was absent. The live
-leaderboard (13:30 WIB) shows the top entries all lead with the FAA
-ground stop and run 26–30 stories, 6 continents, a numbered world map
-and a source on every claim — v3 adopts all four levers, keeping v2's
-proven broadsheet format (which peaked at #43 / 97.5982%).
+Built 14 Nov 2026 ~15:20–16:00 WIB from v3's research (same 13 Nov
+stories, re-verified against v3 NOTES). v3 scored 97.1467% (#169 —
+OUTSIDE paid; #100 cutoff 97.5290%), LOWER than v2's 24 stories
+(97.5982%): density hurt. The current #1 (@cheneyc9, 98.3796%) and
+ex-#1 (@whoistyfur, 98.2554%) are both minimalist single-day images,
+and the kit's own calibration rungs (r1–r3, the strongest references)
+are 4–6 illustrated tiles with one short bold label each. v4 therefore
+cuts 28 stories to 13: one big FAA hero + 6 illustrated tiles + a
+6-item "Also today" strip, nothing below 15 px, generous whitespace.
 
 ## The 28 stories (all of Friday 13 November 2026, any time zone)
 
